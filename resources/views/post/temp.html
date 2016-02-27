@@ -1,0 +1,194 @@
+<p><strong>Arquivo: CategoriaServlet.class</strong></p>
+<pre class="brush:java;">package br.com.lojab.web;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import br.com.lojab.DAO.CategoriaDAO;
+import br.com.lojab.classes.Categoria;
+import br.com.lojab.classes.Produto;
+
+@WebServlet("/categoria")
+public class ServletCategoria extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+    private String mensagem;
+    private boolean criado = false;
+    private boolean editado = false;
+    private boolean excluido = false;
+    
+	public String getMensagem() {
+		return mensagem;
+	}
+    private Date strToDate(String data) throws Exception{
+	    if(data == null){
+			return null;
+		}
+		Date dataF = null;
+		try{
+			DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+			long timestamp = dateFormat.parse(data).getTime();
+			dataF = new Date(timestamp);
+		}catch(ParseException pe){
+			throw pe;
+		}
+		return dataF;
+	}
+	
+	protected void processRequest(HttpServletRequest request,
+	    HttpServletResponse response)
+        throws ServletException, IOException
+    {
+		response.setContentType("text/html;charset=UTF-8");
+		String cmd = request.getParameter("cmd");
+		CategoriaDAO categoriaDAO;
+		Categoria categoria = new Categoria();
+		
+		if(cmd != null){
+		try{
+            categoria.setNomeCategoria(request.getParameter("nomeCat"));
+            categoria.setLinhaCategoria(request.getParameter("linhaCat"));
+            categoria.setFaixaCategoria(request.getParameter("faixaCat"));
+		}catch(Exception ex){ ex.printStackTrace();	}
+		}
+
+        try{
+		categoriaDAO = new CategoriaDAO();
+		RequestDispatcher rd = null;
+		
+		//Controle do Menu
+		if(cmd.equalsIgnoreCase("principal")){
+			HttpSession session=request.getSession(false);  
+			if(session.getAttribute("usuarioLogin") != null){
+				rd = request.getRequestDispatcher("/admin/index.jsp");
+			}else{
+				session.invalidate();
+				rd = request.getRequestDispatcher("usuario?cmd=Admin");
+				}
+			}
+			else if(cmd.equalsIgnoreCase("NovaCategoria")){
+				HttpSession sessionUsu=request.getSession(false);  
+				if(sessionUsu.getAttribute("usuarioLogin") != null){
+					rd = request.getRequestDispatcher("/admin/novacategoria.jsp");
+				}else{
+					sessionUsu.invalidate();
+					rd = request.getRequestDispatcher("usuario?cmd=Admin");
+				}
+			}
+			
+			else if(cmd.equalsIgnoreCase("EditarCategoria")){
+				HttpSession sessionUsu =request.getSession(false);  
+				if(sessionUsu.getAttribute("usuarioLogin") != null){
+					int id = Integer.parseInt(request.getParameter("id"));
+					categoria = categoriaDAO.categoriaId(id);
+					HttpSession session = request.getSession(true);
+					session.setAttribute("categoria", categoria);
+					rd = request.getRequestDispatcher("/admin/editarcategoria.jsp");
+				}else{
+					sessionUsu.invalidate();
+					rd = request.getRequestDispatcher("usuario?cmd=Admin");
+				}
+				
+			}
+			
+			
+			//Acoes da Categoria
+			else if(cmd.equalsIgnoreCase("incluircat")){
+					if(categoriaDAO.salvar(categoria)){
+					criado = true;
+					rd = request.getRequestDispatcher("categoria?cmd=ListarCategoria");
+					}
+			}
+			else if(cmd.equalsIgnoreCase("editarcat")){
+				int id = Integer.parseInt(request.getParameter("id"));
+				if(categoriaDAO.atualizar(categoria, id)){		
+					editado = true;
+					rd = request.getRequestDispatcher("categoria?cmd=ListarCategoria");
+				}
+				
+			}
+			
+			else if(cmd.equalsIgnoreCase("excluircat")){
+				int id = Integer.parseInt(request.getParameter("id"));
+				if(categoriaDAO.deletar(id)){
+					excluido = true;
+					rd = request.getRequestDispatcher("categoria?cmd=ListarCategoria");
+				}
+				
+				
+			}
+			
+			else if(cmd.equalsIgnoreCase("ListarCategoria")){
+				
+				HttpSession sessionUsu =request.getSession(false);  
+				if(sessionUsu.getAttribute("usuarioLogin") != null){
+					if(criado){
+						categoria.setMensagem("Categoria:"
+                        + categoria.getNomeCategoria()
+                        + "criada com sucesso!");
+						criado = false;					
+					}else if(editado){
+						categoria.setMensagem("Categoria:"
+                        + categoria.getNomeCategoria()
+                        + "atualizada com sucesso!");
+						editado = false;	
+					}else if(excluido){
+						categoria.setMensagem("Categoria excluida com sucesso!");
+						excluido = false;	
+					}else{
+						categoria.setMensagem("");
+					}
+							
+					
+					HttpSession session = request.getSession(true);
+					session.setAttribute("mensagem", categoria);
+					
+					List categoriaList = categoriaDAO.todasCategoria();
+					request.setAttribute("categoriaList", categoriaList);
+					
+					rd = request.getRequestDispatcher("/admin/listagemcategoria.jsp");
+				}else{
+					sessionUsu.invalidate();
+					rd = request.getRequestDispatcher("usuario?cmd=Admin");
+				}
+			}
+			
+			rd.forward(request, response);
+			
+		}catch(Exception e){
+			e.printStackTrace();
+			throw new ServletException(e);
+		}
+	
+	}
+	
+	protected void doGet(HttpServletRequest request,
+    HttpServletResponse response)
+    throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+	protected void doPost(HttpServletRequest request,
+    HttpServletResponse response)
+    throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+}
+
+
+</pre>
+<p>&nbsp;</p>
+<p>&nbsp;</p>

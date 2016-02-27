@@ -1,0 +1,413 @@
+<p>Ol&aacute; pessoal, dando continua&ccedil;&atilde;o ao tutorial CRUD com Hibernate, MySQL e Servlet, esse tutorial est&aacute; dividido em duas partes:</p>
+<ul>
+    <li><a title="Parte 1" href="hibernate,-servlet-e-mysql-parte-i">Parte 1</a></li>
+    <li><a title="Parte 2" href="hibernate,-servlet-e-mysql-parte-ii">Parte 2</a></li>
+</ul>
+<p>vamos continuar criando as nossas Views e o nosso Servlet, vamos l&aacute;!, precisaremos criar nossos arquivos JSP, segue aqui os nomes:</p>
+<ul>
+    <li>cadastra_aluno.jsp</li>
+    <li>atualiza_aluno.jsp</li>
+    <li>detalhe_aluno.jsp</li>
+    <li>index.jsp</li>
+    <li>inicial.jsp</li>
+</ul>
+<p>Em<strong> cadastra_aluno.jsp</strong> ser&aacute; uma p&aacute;gina de cadastro de Alunos onde conter&aacute; os dados como Nome e Matr&iacute;cula.</p>
+<p>Em <strong>atualiza_aluno.jsp</strong> ser&aacute; a p&aacute;gina onde ser&atilde;o feitas as altera&ccedil;&otilde;es.</p>
+<p>Em <strong>detalhe_aluno.jsp</strong> ser&aacute; exibido informa&ccedil;&otilde;es sobre o aluno e poder&aacute; excluir o registro tamb&eacute;m.</p>
+<p>Em<strong> index.jsp</strong> ser&aacute; apenas uma p&aacute;gina que nos lan&ccedil;ar&aacute; para pagina<strong> inicial.jsp</strong> onde estar&aacute; os dados.</p>
+<p>E por fim em <strong>inicial.jsp</strong>, ser&aacute; mostrada todos os alunos e seus codigos.</p>
+<p>E como tudo isso ser&aacute; realizado? simples por servlet, existem muitas maneiras de ser feito, porem achei mais simples uitilizar de servlet para organizar tudo isso. criaremos ent&atilde;o o nosso controller <strong>AlunosServlet.java</strong> para isso. para quem n&atilde;o sabe criar servlet atraves do eclipse recomendo que veja meu tutorial aqui , <strong><a title="Upload de Imagens com Java Servlet 3.0 e MySQL" href="upload-de-imagens-com-java-servlet-3.0-e-mysql" target="_blank">Upload de Imagens com Java Servlet 3.0 e MySQL</a>.&nbsp;</strong>pois bem, ap&oacute;s a cria&ccedil;&atilde;o do mesmo, iremos adicionar duas vari&aacute;veis importantes uma &eacute; o <strong>Charset UTF-8</strong> e a outra um comando<strong> cmd</strong> que ser&aacute; disparado das <strong>p&aacute;ginas jsp</strong> e tamb&eacute;m iremos declarar dois objetos <strong>Aluno.java e AlunoDAO.java</strong>&nbsp;no nosso servlet:</p>
+<pre class="brush:java;">package com.carvcom.carvalhos.controller;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.carvcom.carvalhos.DAO.AlunoDAO;
+import com.carvcom.carvalhos.models.Aluno;
+
+/**
+ * Servlet implementation class AlunosServlet
+ */
+//Troca do @WebServlet("/ServletAlunos") para ("/alunos") 
+@WebServlet("/alunos")
+public class AlunosServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+    
+	private void processRequest(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("text/html;charset=UTF-8");
+		//String cmd para chamada de um comando vindo do formulario
+		String cmd = request.getParameter("cmd");
+		//Declara&ccedil;&atilde;o de um Objeto da classe AlunoDAO
+		AlunoDAO alunoDAO;
+		//Declara&ccedil;&atilde;o e instanciamento da Classe Aluno
+		Aluno aluno = new Aluno();
+		
+	}
+	
+	protected void doGet(HttpServletRequest request,
+    HttpServletResponse response)
+    throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+	protected void doPost(HttpServletRequest request,
+    HttpServletResponse response)
+    throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+}
+
+</pre>
+<p>Muito bem, come&ccedil;aremos primeiramente a tratar a<strong> index.jsp e inicial.jsp</strong>, criaremos uma condi&ccedil;&atilde;o que atrav&eacute;s dela ser&aacute; executada a tarefa. sem problemas, &eacute; simples, <strong>entrou no index.jsp ser&aacute; lan&ccedil;ado/redirecionado para inicial.jsp</strong> j&aacute; com todas as informa&ccedil;&otilde;es pertinentes.(consultas de alunos) para isto entraremos no <strong>Try-Catch</strong> para execu&ccedil;&atilde;o do c&oacute;digo, dentro dele, note que eu instanciei a classe AlunoDAO.java para ser usado os met&oacute;dos de <strong>CRUD</strong> e tamb&eacute;m estou declarando um <strong>RequestDispatcher rd&nbsp;</strong>para o tratamento de redirecionamento de p&aacute;ginas. vamos l&aacute;!</p>
+<pre class="brush:java;">package com.carvcom.carvalhos.controller;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.carvcom.carvalhos.DAO.AlunoDAO;
+import com.carvcom.carvalhos.models.Aluno;
+
+/**
+ * Servlet implementation class AlunosServlet
+ */
+//Troca do @WebServlet("/ServletAlunos") para ("/alunos") 
+@WebServlet("/alunos")
+public class AlunosServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+    
+	private void processRequest(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("text/html;charset=UTF-8");
+		//String cmd para chamada de um comando vindo do formulario
+		String cmd = request.getParameter("cmd");
+		//Declara&ccedil;&atilde;o de um Objeto da classe AlunoDAO
+		AlunoDAO alunoDAO;
+		//Declara&ccedil;&atilde;o e instanciamento da Classe Aluno
+		Aluno aluno = new Aluno();
+		
+		try{
+			//Instanciando a classe AlunoDAO
+			alunoDAO = new AlunoDAO();
+			//Declarando um RequestDispatcher para redirecionamento de paginas
+			RequestDispatcher rd = null;
+			
+			//Exibi&ccedil;&atilde;o de Menus
+			//Pagina Prinicipal
+			//Condi&ccedil;&atilde;o para executar apenas quando for chamado o comando Index
+			if(cmd.equalsIgnoreCase("index")){
+//Declarando uma List para armazenar todos os Alunos em uma Lista
+				List listaDeAlunos = alunoDAO.listarTudo();
+//Ap&oacute;s a consulta colocando os dados dentro do atribute para exibi&ccedil;&atilde;o
+				request.setAttribute("listaDeAlunos", listaDeAlunos);
+//Me redirecionando para a pagina inical.jsp com os Alunos
+				rd = request.getRequestDispatcher("/inicial.jsp");
+			
+			}
+//Utilizando do metodo forward para execu&ccedil;&atilde;o do redireciomento de fato.
+			rd.forward(request, response);
+			
+		}catch(Exception exception){
+			exception.printStackTrace();
+			
+		}
+		
+		
+	}
+	
+protected void doGet(HttpServletRequest request,
+    HttpServletResponse response)
+    throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+protected void doPost(HttpServletRequest request,
+    HttpServletResponse response)
+    throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+}
+
+
+</pre>
+<p>Ok, legal os dados alunos est&atilde;o sendo buscado pela nossa Query l&aacute; no nosso <strong>model</strong> e guardando em uma <strong>List</strong> para que mais tarde podemos usar para exibi&ccedil;&atilde;o de dados, e para finalizar me lan&ccedil;o para p&aacute;gina<strong> inicial.jsp</strong>. agora trateremos em especial a pagina<strong> index.jsp e inicial.jsp</strong></p>
+<p><strong>&nbsp;Arquivo index.jsp</strong></p>
+<p><img class="img-responsive" style="display: block;" src="http://s26.postimg.org/iuvy0wlft/image.jpg" alt="imagem8" /></p>
+<p>Note que usei nessa p&aacute;gina somente como um tipo de "Lan&ccedil;ador" para a pagina inical, pelo comando<strong> jsp:forward</strong> e acompanhado de page onde estou indicando o nome do servlet e cmd (comando instanciado no servlet ) com o nome da condi&ccedil;&atilde;o da a&ccedil;&atilde;o no caso a <strong>index</strong>. simples n&atilde;o?</p>
+<p>agora iremos para o arquivo <strong>inicial.jsp</strong> que ser&aacute; de fato onde tudo &eacute; administrado o restante da aplica&ccedil;&atilde;o.</p>
+<p><strong>Arquivo inicial.jsp</strong></p>
+<p><img class="img-responsive" style="display: block;" src="http://s26.postimg.org/m5kb0sbd5/image.jpg" alt="imagem9" /></p>
+<p>Coisas bastante importantes nessa p&aacute;gina, primeiramente importamos classes ao nosso documento JSP, como <strong>ArrayList, JavaList, a nossa classe model Alunos.java</strong>, ap&oacute;s a importa&ccedil;&atilde;o, declaramos a classe <strong>List</strong> para receber as informa&ccedil;&otilde;es vinda da busca do <strong>servlet</strong>, atrav&eacute;s do <strong>getAtribute()</strong>&nbsp;com o nome que que foi dado la no servlet. e por fim joga todo resultado em um la&ccedil;o para que possa exibir todos as informa&ccedil;&otilde;es cadastradas no nosso banco de dados MySQL.&nbsp;</p>
+<p><em><strong>Ok, antes de fazermos algum tipo e teste teremos que mudar uma configura&ccedil;&atilde;o l&aacute; no nosso arquivo hibernate.cfg.xml, &eacute; muito importante a troca do par&acirc;metro create para validate, caso contrario ir&aacute; apagar todos os registro da tabela. ent&atilde;o vamos la:</strong></em></p>
+<p><strong>Arquivo hibernate.cfg.xml</strong></p>
+<p><img class="img-responsive" style="display: block;" src="http://s26.postimg.org/4utw8rjpl/image.jpg" alt="imagem10" /></p>
+<p>Agora sim, com as mudan&ccedil;as devidamente corrigidas, iremos para teste apenas vamos criar alguns registros no MySQL, eu suponho que voc&ecirc;s j&aacute; saibam mexer em phpMyAdmin e incluir alguns registros na nossa tabela alunos, ent&atilde;o pularei essa parte.</p>
+<p>Ap&oacute;s ter inserido alguns registros em nossa tabela, iremos ent&atilde;o executar o arquivo <strong>index.jsp</strong>, para que ele possa ativar o nosso <strong>servlet</strong> e mostrar os nossos registros, ver&aacute; algo assim:</p>
+<p><img class="img-responsive" style="display: block;" src="http://s26.postimg.org/ezsjyc2a1/image.jpg" alt="imagem11" /></p>
+<p>Olha!!!, muito bem, dados exibidos com sucesso em nossa aplica&ccedil;&atilde;o principal. note que quando voc&ecirc; encostar o mouse sobre o link Editar, Excluir ou Info, ir&aacute; ja lhe trazer os c&oacute;digos de cada registro.</p>
+<p>Ok, listagem de alunos esta pronta, vamos agora para as a&ccedil;&otilde;es de Cadastro, Edi&ccedil;&atilde;o, Altera&ccedil;&atilde;o e Exibi&ccedil;&atilde;o em nosso servlet, vou estar colocando um ap&oacute;s o outro e por fim o c&oacute;digo do <strong>servlet</strong> completo.</p>
+<p>Antes de partimos para o CRUD, temos encapsular as informa&ccedil;&otilde;es digitadas pelo usuario atrav&eacute;s do formul&aacute;rio de cadastro ou de edi&ccedil;&atilde;o.. para isso testamos se os dados est&atilde;o sendo enviados e guardamos na classe <strong>Aluno.java</strong>, temos que declarar uma vari&aacute;vel global para fazer edi&ccedil;&atilde;o e exclus&atilde;o atrav&eacute;s de um id:</p>
+<pre class="brush:java;">...<br />//Vari&aacute;vel Global ID<br />private long id;
+private void processRequest(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("text/html;charset=UTF-8");
+		//String cmd para chamada de um comando vindo do formulario
+		String cmd = request.getParameter("cmd");
+		//Declara&ccedil;&atilde;o de um Objeto da classe AlunoDAO
+		AlunoDAO alunoDAO;
+		//Declara&ccedil;&atilde;o e instanciamento da Classe Aluno
+		Aluno aluno = new Aluno();
+
+	//Checando se o cmd &eacute; diferente de null
+		if(cmd != null){
+			try{
+//Ir&aacute; guardar as informa&ccedil;&otilde;es digitadas
+aluno.setCodigo(id);
+aluno.setNome(request.getParameter("nome"));
+aluno.setMatricula(request.getParameter("matricula"));
+			}catch(Exception ex){ex.printStackTrace();}
+		}
+....
+</pre>
+<p><strong>Arquivo AlunosServlet.java - Cadastro</strong></p>
+<pre class="brush:java;">...
+//Lan&ccedil;ando o usuario para a p&aacute;gina de Cadastro
+else if(cmd.equalsIgnoreCase("Cadastrar")){
+   rd = request.getRequestDispatcher("/cadastra_aluno.jsp");<br />//Criando um registros	
+}else if(cmd.equalsIgnoreCase("acaoCadastrar")){
+  //utilizando o m&eacute;todo DAO para salvar o registro 
+    alunoDAO.salvar(aluno);
+    //Ap&oacute;s o cadastro direcionar para pagina inicial.
+      rd = request.getRequestDispatcher("alunos?cmd=index");
+}
+...	
+</pre>
+<p>&nbsp;Na primeira condi&ccedil;&atilde;o "Cadastrar" ir&aacute; apenas nos direcionar para p&aacute;gina de cadastro de alunos, na segunda condi&ccedil;&atilde;o &eacute; a&ccedil;&atilde;o do cadastro, ele ir&aacute; pegar todas informa&ccedil;&otilde;es digitadas, encapsular no objeto aluno e salvar no banco de dados. ahhh n&atilde;o se esque&ccedil;a de mudar o link para essa a&ccedil;&atilde;o no caso, o link se encontra na p&aacute;gina <strong>inicial.jsp</strong> e procura por <strong>+Novo Aluno</strong> e troque para&nbsp;o&nbsp;<strong>href=alunos?cmd=Cadastrar.</strong></p>
+<p><strong>Arquivo cadastra_aluno.jsp</strong><br /><img class="img-responsive" style="display: block; margin-left: auto; margin-right: auto;" src="http://s26.postimg.org/yo0whd8cp/image.jpg" alt="imagem12" /></p>
+<p><strong>Arquivo AlunosServlet.java -&nbsp;Edi&ccedil;&atilde;o</strong></p>
+<pre class="brush:java;">...
+//Lan&ccedil;ando o usuario para a p&aacute;gina de Edi&ccedil;&atilde;o
+else if(cmd.equalsIgnoreCase("Editar")){
+   //Recebendo um par&ecirc;metro id vindo da p&aacute;gina jsp 
+     id = Integer.parseInt(request.getParameter("id"));
+   //Buscando um certo aluno pelo c&oacute;digo desse aluno
+    aluno = alunoDAO.listarPorCodigo(id);
+   //Utilizando uma forma diferente de mandar dados para o jsp a HttpSession
+     HttpSession session = request.getSession(true);
+    //Guardando a infoma&ccedil;&atilde;o do aluno pelo setAtribute
+     session.setAttribute("aluno", aluno);
+     rd = request.getRequestDispatcher("/atualiza_aluno.jsp");
+    }else if(cmd.equalsIgnoreCase("acaoEditar")){
+    //J&aacute; com o id na vari&aacute;vel global podemos editar o nosso registro
+    alunoDAO.atualizar(aluno);
+    //Redirecionando para a inicial
+      rd = request.getRequestDispatcher("alunos?cmd=index");
+}
+...
+</pre>
+<p>&nbsp;o mesma a&ccedil;&atilde;o do m&eacute;todo acima, exceto que o sistema guarda um c&oacute;digo, para que posteriormente possa atualizar registro por esse c&oacute;digo.</p>
+<p><strong>Arquivo atualiza_aluno.jsp</strong></p>
+<p>]</p>
+<p><img class="img-responsive" style="display: block;" src="http://s26.postimg.org/8am0ibgy1/image.jpg" alt="imagem13" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>Arquivo AlunosServlet.java -&nbsp;Exclus&atilde;o</strong></p>
+<pre class="brush:java;">...<br />//Excluir
+else if(cmd.equalsIgnoreCase("Excluir")){
+  id = Integer.parseInt(request.getParameter("id"));
+  aluno = alunoDAO.listarPorCodigo(id);
+  HttpSession session = request.getSession(true);
+  session.setAttribute("aluno", aluno);
+  rd = request.getRequestDispatcher("/detalhe_aluno.jsp");
+}
+			
+else if(cmd.equalsIgnoreCase("acaoExcluir")){
+//J&aacute; com o id na vari&aacute;vel global podemos excluir o nosso registro
+alunoDAO.excluir(aluno);
+rd = request.getRequestDispatcher("alunos?cmd=index");
+}
+			
+</pre>
+<p>&nbsp;Nesse caso, eu resolvi direcionar o usuario para a p&aacute;gina de detalhes, para que possa posteriormente tratar via javascript com alert se realmente quer excluir esse registro. &nbsp;a primeria condi&ccedil;&atilde;o ir&aacute; preencher o formul&aacute;rio atrav&eacute;s de um c&oacute;digo. o segunda condi&ccedil;&atilde;o ir&aacute; excluir o registro do banco.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>Arquivo AlunosServlet.java - Exibi&ccedil;&atilde;o</strong></p>
+<pre class="brush:java;">...<br />//Detalhes
+else if(cmd.equalsIgnoreCase("Info")){
+  id = Integer.parseInt(request.getParameter("id"));
+  aluno = alunoDAO.listarPorCodigo(id);
+  HttpSession session = request.getSession(true);
+  session.setAttribute("aluno", aluno);
+  rd = request.getRequestDispatcher("/detalhe_aluno.jsp");
+}<br />...</pre>
+<p>Condi&ccedil;&atilde;o de povoamento de informa&ccedil;&otilde;es apenas. caso queria excluir tambem pode!</p>
+<p><strong>Arquivo detalhe_aluno.jsp</strong></p>
+<p><img class="img-responsive" style="display: block;" src="http://s26.postimg.org/vrdvh32ix/image.jpg" alt="imagem14" width="846" height="257" /></p>
+<p>&nbsp;</p>
+<p><strong>Arquivo AlunosServlet.java -&nbsp;Completo</strong></p>
+<pre class="brush:java;">package com.carvcom.carvalhos.controller;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import com.carvcom.carvalhos.DAO.AlunoDAO;
+import com.carvcom.carvalhos.models.Aluno;
+
+/**
+ * Servlet implementation class AlunosServlet
+ */
+//Troca do @WebServlet("/ServletAlunos") para ("/alunos") 
+@WebServlet("/alunos")
+public class AlunosServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    //Vari&aacute;vel Global<br />    private long id;
+    
+	private void processRequest(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("text/html;charset=UTF-8");
+		//String cmd para chamada de um comando vindo do formulario
+		String cmd = request.getParameter("cmd");
+		//Declara&ccedil;&atilde;o de um Objeto da classe AlunoDAO
+		AlunoDAO alunoDAO;
+		//Declara&ccedil;&atilde;o e instanciamento da Classe Aluno
+		Aluno aluno = new Aluno();
+		
+		//Checando se o cmd &eacute; diferente de null
+		if(cmd != null){
+			try{
+				aluno.setCodigo(id);
+				aluno.setNome(request.getParameter("nome"));
+				aluno.setMatricula(request.getParameter("matricula"));
+			}catch(Exception ex){ex.printStackTrace();}
+		}
+		
+		try{
+			//Instanciando a classe AlunoDAO
+			alunoDAO = new AlunoDAO();
+			//Declarando um RequestDispatcher para redirecionamento de paginas
+			RequestDispatcher rd = null;
+			
+			//Exibi&ccedil;&atilde;o de Menus
+			//Pagina Prinicipal
+			if(cmd.equalsIgnoreCase("index")){
+				List listaDeAlunos = alunoDAO.listarTudo();
+				request.setAttribute("listaDeAlunos", listaDeAlunos);
+				//Me redirecionando para a pagina inical.jsp com os Alunos
+				rd = request.getRequestDispatcher("/inicial.jsp");
+			
+			}
+			
+			//Lan&ccedil;ando o usuario para a p&aacute;gina de Cadastro
+			else if(cmd.equalsIgnoreCase("Cadastrar")){
+				rd = request.getRequestDispatcher("/cadastra_aluno.jsp");
+				
+			//Criando um registros	
+			}else if(cmd.equalsIgnoreCase("acaoCadastrar")){
+				//utilizando o m&eacute;todo DAO para salvar o registro 
+				alunoDAO.salvar(aluno);
+				//Ap&oacute;s o cadastro direcionar para pagina inicial.
+				rd = request.getRequestDispatcher("alunos?cmd=index");
+			}
+			//Lan&ccedil;ando o usuario para a p&aacute;gina de Edi&ccedil;&atilde;o
+			else if(cmd.equalsIgnoreCase("Editar")){
+				//Recebendo um par&ecirc;metro id vindo da p&aacute;gina jsp 
+				id = Integer.parseInt(request.getParameter("id"));
+				//Buscando um certo aluno pelo c&oacute;digo desse aluno
+				aluno = alunoDAO.listarPorCodigo(id);
+				//Utilizando uma forma diferente de mandar dados para o jsp a HttpSession
+				HttpSession session = request.getSession(true);
+				//Guardando a infoma&ccedil;&atilde;o do aluno pelo setAtribute
+				session.setAttribute("aluno", aluno);
+				rd = request.getRequestDispatcher("/atualiza_aluno.jsp");
+				
+	
+			}else if(cmd.equalsIgnoreCase("acaoEditar")){
+			    //J&aacute; com o id na vari&aacute;vel global
+                //podemos editar o nosso registro
+				alunoDAO.atualizar(aluno);	
+				//Redirecionando para a inicial
+				rd = request.getRequestDispatcher("alunos?cmd=index");
+			}
+			
+			//Excluir
+			else if(cmd.equalsIgnoreCase("Excluir")){
+				id = Integer.parseInt(request.getParameter("id"));
+				aluno = alunoDAO.listarPorCodigo(id);
+				HttpSession session = request.getSession(true);
+				session.setAttribute("aluno", aluno);
+				rd = request.getRequestDispatcher("/detalhe_aluno.jsp");
+			}
+			
+			else if(cmd.equalsIgnoreCase("acaoExcluir")){
+				//J&aacute; com o id na vari&aacute;vel global
+                //podemos excluir o nosso registro
+				alunoDAO.excluir(aluno);
+				rd = request.getRequestDispatcher("alunos?cmd=index");
+			}
+			
+			
+			//Detalhes
+			else if(cmd.equalsIgnoreCase("Info")){
+				id = Integer.parseInt(request.getParameter("id"));
+				aluno = alunoDAO.listarPorCodigo(id);
+				HttpSession session = request.getSession(true);
+				session.setAttribute("aluno", aluno);
+				rd = request.getRequestDispatcher("/detalhe_aluno.jsp");
+			}
+			
+			//Utilizando do metodo forward para
+            //execu&ccedil;&atilde;o do redireciomento de fato.
+			rd.forward(request, response);
+			
+		}catch(Exception exception){
+			exception.printStackTrace();
+			
+		}
+		
+		
+	}
+	
+	protected void doGet(HttpServletRequest request,
+    HttpServletResponse response)
+    throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+	protected void doPost(HttpServletRequest request,
+    HttpServletResponse response)
+    throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+}
+
+
+</pre>
+<p>&nbsp;</p>
+<p>Maravilha!, feito tudo isso voc&ecirc; j&aacute; pode testar sua aplica&ccedil;&atilde;o, e fazer as a&ccedil;&otilde;es b&aacute;sica de qualquer sistema. espero que tenha gostado dessa&nbsp;serie de tuturial sobre o Hibernate, Servlet e MySQL.</p>
+<p>Lembrando que os arquivos desse tutorial se encontra no meu GItHub:</p>
+<p><a class="btn btn-primary" href="https://github.com/mtcarvalhos/crud-hibernate" target="_blank">Ir para o GIT</a></p>
+<p>&nbsp;</p>
+<p>At&eacute; a pr&oacute;xima!</p>
